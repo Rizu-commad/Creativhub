@@ -1,5 +1,9 @@
 <?php
 
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 // Ensure Vercel environment flag
 putenv('VERCEL=1');
 $_ENV['VERCEL'] = '1';
@@ -21,5 +25,14 @@ foreach ($dirs as $dir) {
     }
 }
 
-// Forward Vercel request to Laravel's public/index.php
-require __DIR__ . '/../public/index.php';
+try {
+    require __DIR__ . '/../public/index.php';
+} catch (\Throwable $e) {
+    http_response_code(500);
+    echo '<div style="font-family: sans-serif; padding: 30px; background: #fff; color: #111;">';
+    echo '<h1 style="color: #e11d48;">Laravel Error on Vercel</h1>';
+    echo '<p style="font-size: 16px;"><strong>Message:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+    echo '<p><strong>File:</strong> ' . htmlspecialchars($e->getFile()) . ':' . $e->getLine() . '</p>';
+    echo '<pre style="background: #f1f5f9; padding: 15px; border-radius: 8px; overflow: auto; font-size: 13px;">' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+    echo '</div>';
+}
