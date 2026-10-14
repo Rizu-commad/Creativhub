@@ -13,9 +13,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (navMenu.classList.contains('active')) {
                 toggleIcon.classList.remove('fa-bars');
                 toggleIcon.classList.add('fa-xmark');
+                document.body.classList.add('menu-open');
             } else {
                 toggleIcon.classList.remove('fa-xmark');
                 toggleIcon.classList.add('fa-bars');
+                document.body.classList.remove('menu-open');
             }
         });
 
@@ -23,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.addEventListener('click', function (e) {
             if (!navMenu.contains(e.target) && !mobileToggle.contains(e.target)) {
                 navMenu.classList.remove('active');
+                document.body.classList.remove('menu-open');
                 if (toggleIcon) {
                     toggleIcon.classList.remove('fa-xmark');
                     toggleIcon.classList.add('fa-bars');
@@ -35,11 +38,24 @@ document.addEventListener('DOMContentLoaded', function () {
         menuLinks.forEach(link => {
             link.addEventListener('click', function () {
                 navMenu.classList.remove('active');
+                document.body.classList.remove('menu-open');
                 if (toggleIcon) {
                     toggleIcon.classList.remove('fa-xmark');
                     toggleIcon.classList.add('fa-bars');
                 }
             });
+        });
+
+        // Close menu on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
+                document.body.classList.remove('menu-open');
+                if (toggleIcon) {
+                    toggleIcon.classList.remove('fa-xmark');
+                    toggleIcon.classList.add('fa-bars');
+                }
+            }
         });
     }
 
@@ -53,4 +69,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    // Scroll Reveal Animation
+    const revealElements = document.querySelectorAll('.reveal');
+    if (revealElements.length > 0) {
+        const revealObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        revealElements.forEach(function (el) {
+            revealObserver.observe(el);
+        });
+    }
 });
