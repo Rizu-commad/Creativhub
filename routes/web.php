@@ -108,3 +108,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::patch('contacts/{contact}/read', [AdminContactController::class, 'markRead'])->name('contacts.markRead');
     Route::delete('contacts/{contact}', [AdminContactController::class, 'destroy'])->name('contacts.destroy');
 });
+
+// Storage fallback route
+Route::get('/storage/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    return response()->file($fullPath);
+})->where('path', '.*')->name('storage.file');

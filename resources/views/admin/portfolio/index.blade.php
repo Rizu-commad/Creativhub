@@ -36,7 +36,7 @@
                             @elseif(in_array(pathinfo($portfolio->image, PATHINFO_EXTENSION), ['pdf']))
                                 <div class="portfolio-thumb-placeholder" style="background:#ffebee; color:#d9534f;"><i class="fa-solid fa-file-pdf"></i></div>
                             @else
-                                <img src="{{ Storage::url($portfolio->image) }}" class="portfolio-thumb" alt="Thumb" style="object-fit:cover;">
+                                <img src="{{ $portfolio->image_url }}" class="portfolio-thumb" alt="Thumb" style="object-fit:cover;">
                             @endif
                         @else
                             <div class="portfolio-thumb-placeholder"><i class="fa-regular fa-image"></i></div>

@@ -36,13 +36,26 @@ class PortfolioController extends Controller
             'description' => 'nullable|string',
             'category' => 'nullable|string|max:255',
             'client_name' => 'nullable|string|max:255',
-            'image' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi,mkv,pdf|max:1048576',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi,mkv,pdf|max:5120',
+            'image_base64' => 'nullable|string',
             'is_active' => 'nullable|boolean',
             'sort_order' => 'nullable|integer',
         ]);
 
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('portfolios', 'public');
+        if (!empty($validated['image_base64'])) {
+            $validated['image'] = $validated['image_base64'];
+            unset($validated['image_base64']);
+        } elseif ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $mime = $file->getMimeType();
+
+            // Save images directly as base64 Data URI for 100% persistence on serverless (Vercel)
+            if (str_starts_with($mime, 'image/')) {
+                $imageData = file_get_contents($file->getRealPath());
+                $validated['image'] = 'data:' . $mime . ';base64,' . base64_encode($imageData);
+            } else {
+                $validated['image'] = $file->store('portfolios', 'public');
+            }
         }
 
         $validated['is_active'] = $request->has('is_active');
@@ -71,17 +84,33 @@ class PortfolioController extends Controller
             'description' => 'nullable|string',
             'category' => 'nullable|string|max:255',
             'client_name' => 'nullable|string|max:255',
-            'image' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi,mkv,pdf|max:1048576',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi,mkv,pdf|max:5120',
+            'image_base64' => 'nullable|string',
             'is_active' => 'nullable|boolean',
             'sort_order' => 'nullable|integer',
         ]);
 
-        if ($request->hasFile('image')) {
-            // Delete old image
-            if ($portfolio->image) {
+        if (!empty($validated['image_base64'])) {
+            if ($portfolio->image && !str_starts_with($portfolio->image, 'data:') && !str_starts_with($portfolio->image, 'http')) {
                 Storage::disk('public')->delete($portfolio->image);
             }
-            $validated['image'] = $request->file('image')->store('portfolios', 'public');
+            $validated['image'] = $validated['image_base64'];
+            unset($validated['image_base64']);
+        } elseif ($request->hasFile('image')) {
+            // Delete old image if on disk
+            if ($portfolio->image && !str_starts_with($portfolio->image, 'data:') && !str_starts_with($portfolio->image, 'http')) {
+                Storage::disk('public')->delete($portfolio->image);
+            }
+
+            $file = $request->file('image');
+            $mime = $file->getMimeType();
+
+            if (str_starts_with($mime, 'image/')) {
+                $imageData = file_get_contents($file->getRealPath());
+                $validated['image'] = 'data:' . $mime . ';base64,' . base64_encode($imageData);
+            } else {
+                $validated['image'] = $file->store('portfolios', 'public');
+            }
         }
 
         $validated['is_active'] = $request->has('is_active');
@@ -97,7 +126,7 @@ class PortfolioController extends Controller
      */
     public function destroy(Portfolio $portfolio)
     {
-        if ($portfolio->image) {
+        if ($portfolio->image && !str_starts_with($portfolio->image, 'data:') && !str_starts_with($portfolio->image, 'http')) {
             Storage::disk('public')->delete($portfolio->image);
         }
 

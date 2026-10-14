@@ -19,4 +19,17 @@ class Portfolio extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function getImageUrlAttribute(): string
+    {
+        if (empty($this->image)) {
+            return asset('assets/images/placeholder.jpg');
+        }
+
+        if (str_starts_with($this->image, 'data:') || str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+            return $this->image;
+        }
+
+        return \Illuminate\Support\Facades\Storage::url($this->image);
+    }
 }
