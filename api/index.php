@@ -1,7 +1,7 @@
 <?php
 
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
 error_reporting(E_ALL);
 
 // Ensure Vercel environment flag
@@ -15,6 +15,25 @@ if (empty($_ENV['APP_KEY']) && empty($_SERVER['APP_KEY']) && !getenv('APP_KEY'))
     putenv("APP_KEY={$defaultKey}");
     $_ENV['APP_KEY'] = $defaultKey;
     $_SERVER['APP_KEY'] = $defaultKey;
+}
+
+// Ensure Supabase DB credentials exist
+if (empty($_ENV['DB_HOST']) && empty($_SERVER['DB_HOST']) && !getenv('DB_HOST')) {
+    $dbConfig = [
+        'DB_CONNECTION' => 'pgsql',
+        'DB_HOST' => 'aws-0-ap-northeast-2.pooler.supabase.com',
+        'DB_PORT' => '6543',
+        'DB_DATABASE' => 'postgres',
+        'DB_USERNAME' => 'postgres.zgfvhmyrlysjpsahpjls',
+        'DB_PASSWORD' => '#Rizqinur99',
+        'DB_SSLMODE' => 'require',
+    ];
+
+    foreach ($dbConfig as $key => $val) {
+        putenv("{$key}={$val}");
+        $_ENV[$key] = $val;
+        $_SERVER[$key] = $val;
+    }
 }
 
 // Redirect all Laravel cache & storage paths to writable /tmp
