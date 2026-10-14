@@ -9,6 +9,14 @@ putenv('VERCEL=1');
 $_ENV['VERCEL'] = '1';
 $_SERVER['VERCEL'] = '1';
 
+// Ensure APP_KEY exists
+if (empty($_ENV['APP_KEY']) && empty($_SERVER['APP_KEY']) && !getenv('APP_KEY')) {
+    $defaultKey = 'base64:sCOiKQoWFj/wdAiTrxNGWcZAU72fdquuJxGlf6IaImc=';
+    putenv("APP_KEY={$defaultKey}");
+    $_ENV['APP_KEY'] = $defaultKey;
+    $_SERVER['APP_KEY'] = $defaultKey;
+}
+
 // Redirect all Laravel cache & storage paths to writable /tmp
 $baseTmp = '/tmp/storage';
 
