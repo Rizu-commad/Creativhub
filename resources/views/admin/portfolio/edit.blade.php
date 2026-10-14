@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewContainer = document.getElementById('imagePreviewContainer');
     const previewImg = document.getElementById('imagePreviewImg');
     const compressInfo = document.getElementById('compressInfo');
+    let isCompressing = false;
 
     if (fileInput) {
         fileInput.addEventListener('change', function(e) {
@@ -108,6 +109,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (file.type.startsWith('image/')) {
+                isCompressing = true;
+                compressInfo.innerHTML = `<span style="color:var(--gold-400); font-weight:600;"><i class="fa-solid fa-spinner fa-spin"></i> Sedang mengoptimasi gambar...</span>`;
+                previewContainer.style.display = 'block';
+
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     const img = new Image();
@@ -115,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const canvas = document.createElement('canvas');
                         let width = img.width;
                         let height = img.height;
-                        const maxDim = 1600;
+                        const maxDim = 1200;
 
                         if (width > maxDim || height > maxDim) {
                             if (width > height) {
@@ -132,15 +137,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        const dataUrl = canvas.toDataURL('image/webp', 0.82);
+                        const dataUrl = canvas.toDataURL('image/webp', 0.80);
                         hiddenBase64.value = dataUrl;
+                        isCompressing = false;
 
                         const origSize = (file.size / (1024 * 1024)).toFixed(2);
                         const newSize = Math.round((dataUrl.length * 3) / 4 / 1024);
 
                         previewImg.src = dataUrl;
-                        previewContainer.style.display = 'block';
-                        compressInfo.innerHTML = `<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-bolt"></i> Gambar baru berhasil dioptimasi (${origSize} MB &rarr; ${newSize} KB). Siap simpan super cepat!</span>`;
+                        compressInfo.innerHTML = `<span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Foto berhasil dioptimasi (${origSize} MB &rarr; ${newSize} KB). Siap simpan super cepat!</span>`;
                     };
                     img.src = event.target.result;
                 };
@@ -148,15 +153,28 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 hiddenBase64.value = '';
                 previewContainer.style.display = 'none';
-                if (file.size > 4.5 * 1024 * 1024) {
-                    alert('Perhatian: Ukuran file lebih dari 4.5 MB. Server cloud Vercel membatasi upload maksimal 4.5 MB per file.');
+                if (file.size > 4 * 1024 * 1024) {
+                    alert('File ' + (file.size / (1024 * 1024)).toFixed(1) + ' MB terlalu besar! Batas maksimal server adalah 4 MB per file.');
+                    fileInput.value = '';
                 }
             }
         });
     }
 
     if (form && submitBtn) {
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(e) {
+            if (isCompressing) {
+                e.preventDefault();
+                alert('Gambar sedang dioptimasi, mohon tunggu 1-2 detik...');
+                return;
+            }
+
+            // CRITICAL: Strip the name attribute so the browser does NOT send the multi-megabyte raw file!
+            // Only the lightweight compressed base64 is sent, avoiding Vercel 413 FUNCTION_PAYLOAD_TOO_LARGE!
+            if (hiddenBase64.value && fileInput) {
+                fileInput.removeAttribute('name');
+            }
+
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan... Mohon tunggu';
         });
